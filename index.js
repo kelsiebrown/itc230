@@ -14,7 +14,7 @@ http.createServer(function(req,res){
             break;
         default:
             res.writeHead(404, {'Content-Type': 'text/plain'});
-            res.end('This file does not exist!');
+            res.end('This page does not exist!');
             break;
     }
 }).listen(process.env.PORT || 3000);

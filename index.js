@@ -1,4 +1,4 @@
-//index.js for assignment 1
+//index.js for ITC 230 assignments 1 & 2
 
 var http = require("http"), fs = require('fs'), qs = require('querystring');
 let albums = require("./lib/albums.js");

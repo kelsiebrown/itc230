@@ -1,4 +1,4 @@
-//index.js for ITC 230 assignments 1 & 2
+//index.js for ITC230
 
 var http = require("http"), fs = require('fs'), qs = require('querystring');
 let albums = require("./lib/albums.js");
@@ -27,23 +27,33 @@ http.createServer(function(req,res){
     case '/': 
       serveStatic(res, '/public/home.html', 'text/html');
       break;
+          
     case '/about':
       res.writeHead(200, {'Content-Type': 'text/plain'});
       res.end('This is the about page');
       break;
+          
     case '/get':
       let found = albums.get(query.title);
       res.writeHead(200, {'Content-Type': 'text/plain'});
       let results = (found) ? JSON.stringify(found) : "Not found";
       res.end('Results for ' + query.title + "\n" + results);
       break;
+          
     case '/delete':
+      let deleted = albums.delete(query.title);
       res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.end("The following album was deleted: \n" + query.title);
+      let results_deleted = (deleted.deleted) ? ' was deleted.' : ' was not deleted.';
+      res.end(query.title + results_deleted);
       break;
+          
     case '/add':
+      let added = albums.add(query.title);
       res.writeHead(200, {'Content-Type': 'text/plain'});
-      res.end("Added album title: \n" + query.title);
+      let results_added = (added.added) ? ' was added.' : ' was not added.';
+      res.end(query.title + results_added);
+      break;
+          
     default:
       res.writeHead(404, {'Content-Type': 'text/plain'});
       res.end('404: Page not found.');

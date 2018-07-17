@@ -1,0 +1,24 @@
+<HTML>
+<head>
+<title>Kelsie Brown || ITC230 || Deleted Page</title>
+</head>
+
+<body>
+    <h1>Kelsie Brown</h1>
+    <h2>ITC230 - Summer 2018</h2>
+
+    <h3>Delete {{title}}: </h3>
+    {{#if deleted}}
+    <p><b>{{title}}</b> successfully deleted.</p>
+    
+    <p>Remaining albums: {{deleted.total}}</p>
+    
+    {{else}}
+        <p><b>Sorry, {{title}} was not deleted.</b></p>
+    {{/if}}
+    
+    <hr>
+    
+    <a href="/">Return Home</a>
+</body>
+</HTML>

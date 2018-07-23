@@ -1,27 +1,36 @@
 // index.js for ITC230
+// up thru and including week 4 assignment
 
 'use strict'
-
-let albums = require("./lib/albums.js");
 
 // set up express
 const express = require("express");
 const app = express();
+
+// update to use mongodb and mongoose
+var Album = require("./models/album");
 
 // set port to 3000
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public'));
 app.use(require("body-parser").urlencoded({extended: true}));
 
-// set up handlebars
+//display errors
+/*app.use((err, req, res, next) => {
+    console.log(err)
+});*/
+
+// set up handlebars template engine
 let handlebars = require("express-handlebars");
 app.engine(".html", handlebars({extname: ".html"}));
 app.set("view engine", ".html");
 
 // static file for home.html
 app.get('/', (req, res) => {
-    res.type('text/html');
-    res.sendFile(__dirname + '/public/home.html');
+    Album.find((err, albums) => {
+        if (err) return next(err);
+        res.render('home', {albums: albums });
+    });
 });
 
 // plain text response for about page
@@ -32,15 +41,26 @@ app.get('/about', (req, res) => {
 
 // GET response for delete path
 app.get('/delete', (req, res) => {
-    let deleted = albums.delete(req.query.title);
-    res.render("delete", {title: req.query.title, deleted: deleted});
+    Album.remove({ title: req.query.title}, (err, deleted) => {
+        if (err) return next(err);
+        //let deleted = Album.delete(req.query.title);
+        Album.count((err, total) => {
+            res.type('text/html');
+            res.render('delete', {
+                title: req.query.title,
+                deleted: deleted,
+                total: total });
+        });
+    });
 });
 
 // POST response for get path
 app.post('/get', (req, res) => {
-    console.log(req.body);
-    let found = albums.get(req.body.title);
-    res.render("details", {title: req.body.title, found: found});
+    Album.findOne({ title: req.body.title }, (err, Album) => {
+        if (err) return next(err);
+        res.type('text/html');
+        res.render('details', {found: Album} );
+    });
 });
 
 // USE response for 404 handler

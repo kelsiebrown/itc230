@@ -15,6 +15,12 @@
     </form>
 
     <hr>
+    
+    <h3>All albums in stock</h3>
+    
+    {{#each books}}
+        <li><a href="/get/?title={{title}}">{{title}}</a></li>
+    {{/each}}
 
 </body>
 </html>

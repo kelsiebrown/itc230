@@ -7,18 +7,17 @@
 const express = require("express");
 const app = express();
 
+
 // update to use mongodb and mongoose
-var Album = require("./models/album");
+var Album = require("./models/Album");
 
 // set port to 3000
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public'));
 app.use(require("body-parser").urlencoded({extended: true}));
-
-//display errors
-/*app.use((err, req, res, next) => {
-    console.log(err)
-});*/
+app.use((err, req, res, next) => {
+  console.log(err)
+});
 
 // set up handlebars template engine
 let handlebars = require("express-handlebars");
@@ -39,27 +38,75 @@ app.get('/about', (req, res) => {
     res.send('This is the about page');
 });
 
-// GET response for delete path
-app.get('/delete', (req, res) => {
-    Album.remove({ title: req.query.title}, (err, deleted) => {
+// GET response for get path
+app.get('/get', (req, res) => {
+    Album.findOne({ title: req.query.title }, (err, albums) => {
         if (err) return next(err);
-        //let deleted = Album.delete(req.query.title);
-        Album.count((err, total) => {
-            res.type('text/html');
-            res.render('delete', {
-                title: req.query.title,
-                deleted: deleted,
-                total: total });
-        });
+        res.type('text/html');
+        res.render('details', {found: albums} );
     });
 });
 
 // POST response for get path
 app.post('/get', (req, res) => {
-    Album.findOne({ title: req.body.title }, (err, Album) => {
+    Album.findOne({ title: req.body.title }, (err, albums) => {
         if (err) return next(err);
         res.type('text/html');
-        res.render('details', {found: Album} );
+        res.render('details', {found: albums} );
+    });
+});
+
+// GET response for delete path
+app.get('/delete', (req, res) => {
+    Album.remove({ title: req.query.title}, (err, result) => {
+        if (err) return next(err);
+        let deleted = result.result.n !== 0;
+        Album.count((err, total) => {
+            res.type('text/html');
+            res.render('delete', {
+                title: req.query.title,
+                //deleted: result.result,
+                deleted: result.result.n !==0,
+                total: total });
+        });
+    });
+});
+
+
+// APIs
+// get all items
+app.get('/api/albums', (req, res, next) => {
+    let title = req.params.title;
+    console.log(title);
+    Album.find((err, results) => {
+        if (err || !results) return next(err);
+        res.json(results);
+    })
+});
+
+// get a single item
+app.get('/api/album/:title', (req, res, next) => {
+    let title = req.params.title;
+    Album.findOne({title: title}, (err, found) => {
+        if (err || !found) return next(err);
+        res.json(found);
+    });
+});
+
+// delete an item
+app.get('/api/delete/:title', (req, res, next) => {
+    Album.remove({"title":req.params.title}, (err, found) => {
+        if (err) return next(err);
+        res.json({"deleted": found.result});
+    });
+});
+
+// add or update an item
+app.get('/api/add/:title/:artist/:price', (req, res, next) => {
+    let title = req.params.title;
+    Album.update({title: title}, {title:title, artist: req.params.artist, price: req.params.price}, {upsert: true}, (err, result) => {
+        if (err) return next(err);
+        res.json({updated: result.n});
     });
 });
 

@@ -1,20 +1,18 @@
 // index.js for ITC230
-// up thru and including week 4 assignment
+// up thru and including week 6 assignment
 
 'use strict'
 
-// set up express
 const express = require("express");
+const Album = require("./models/Album");
+const bodyParser = require("body-parser");
 const app = express();
 
-
-// update to use mongodb and mongoose
-var Album = require("./models/Album");
-
-// set port to 3000
+// set port to 3000 with Express
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public'));
 app.use(require("body-parser").urlencoded({extended: true}));
+app.use(bodyParser.json());
 app.use((err, req, res, next) => {
   console.log(err)
 });
@@ -25,17 +23,18 @@ app.engine(".html", handlebars({extname: ".html"}));
 app.set("view engine", ".html");
 
 // static file for home.html
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
     Album.find((err, albums) => {
+        console.log(albums);
         if (err) return next(err);
-        res.render('home', {albums: albums });
+        res.render('home', {albums: JSON.stringify(albums)});
     });
 });
 
 // plain text response for about page
 app.get('/about', (req, res) => {
     res.type('text/plain');
-    res.send('This is the about page');
+    res.render("Here's the about page.");
 });
 
 // GET response for get path
@@ -109,6 +108,7 @@ app.get('/api/add/:title/:artist/:price', (req, res, next) => {
         res.json({updated: result.n});
     });
 });
+
 
 // USE response for 404 handler
 app.use((req, res) => {

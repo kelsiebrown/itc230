@@ -1,7 +1,7 @@
 <html>
 <head>
   <meta charset="utf-8" name="viewport" content="width=device-width">
-  <title>Kelsie Brown || Week 6 Assignment || ITC230 || Summer 2018</title>
+  <title>Kelsie Brown || Week 7 Assignment || ITC230 || Summer 2018</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.0/react.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.6.0/react-dom.js"></script>
@@ -17,6 +17,10 @@
       
       h1, h2, h3 {
           text-align: center;
+      }
+      
+      h3 {
+          margin-top: 20px;
       }
       
       .itemlist {
@@ -57,7 +61,9 @@
           border: 1px solid #444;
           display: block;
           margin: 0 auto;
+          margin-bottom: 8px;
       }
+      
   </style>
 </head>
 
@@ -77,6 +83,10 @@
 
         this.onChange = this.onChange.bind(this);
         this.onClear = this.onClear.bind(this);
+        // add new functions for assignment 7
+        this.onSearch = this.onSearch.bind(this);
+        this.onSave = this.onSave.bind(this);
+        this.onDelete = this.onDelete.bind(this);
       }
 
       // show album details when clicked
@@ -88,15 +98,69 @@
       }
 
       // reset form
-      onClear() {
+      onClear(){
         this.setState({curItem: {}});
       }
 
-      // change form to show details
-      onChange(event) {
+      // change form to show album details
+      onChange(event){
         var newItem = this.state.curItem;
         newItem[event.target.name] = event.target.value
         this.setState({curItem: newItem});
+      }
+
+      // change all search queries to lowercase
+      onSearch(event){
+        this.setState({
+            filter: event.target.value.toLowerCase()
+        });
+      }
+
+      // add and edit albums
+      onSave(){
+          let newAlbum = this.state.curItem;
+          if (!newAlbum.title){
+              return;
+          }
+          fetch("/api/add", {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newAlbum)
+          })
+          .then(res => res.json())
+          .then((json) => {
+            let newAlbum;
+            // add new album
+            if (!newAlbum._id){
+                newAlbum = this.state.items;
+                newAlbum._id = json._id;
+                newAlbum.push(newAlbum);
+            } else {
+                // edit album
+                newAlbum = this.state.items.map((item) => {
+                  if (item._id === newAlbum._id){
+                      item = newAlbum;
+                  }
+                  return item;
+                });
+              }
+          });
+        }
+
+      // delete album
+      onDelete() {
+        let id = this.state.curItem._id;
+        fetch("/api/delete/" + id).then((response) => {
+          return response.json();
+        }).then((results) => {
+            const remainder = this.state.items.filter((item) => {
+              return item._id !== id;
+            });
+            this.setState({
+                items: remainder,
+                curItem: {}
+            });
+        });
       }
     
       // render app on page
@@ -113,13 +177,17 @@
                 show={this.showDetails.bind(this)}
             />
             </div>
-        
-            <br></br><hr></hr>
+                
+            <SearchForm filter={this.state.filter} change={this.onSearch}/>
                 
             <div className="details">
               <ItemDetails 
                   item={this.state.curItem} 
+                  reset={this.onClear} 
+                  change={this.onChange} 
+                  save={this.onSave} 
                   reset={this.onClear}
+                  delete={this.onDelete}
              />
             </div>
           </div>
@@ -137,6 +205,16 @@
       return <span id="item-list"><ul>{itemNodes}</ul></span>;
     }
     
+    // show search form
+    const SearchForm = (props) => {
+      return (
+        <div id="searchform">
+          <h3>Search for an album</h3>
+          <form><input type="text" placeholder="Search by album title" value={props.filter} onChange={props.change}/></form>
+        </div>
+      );
+    }
+    
     // show album details
     const ItemDetails = (props) => {
         return (
@@ -147,7 +225,9 @@
               <input type="text" name="artist" placeholder="Artist Name" value={props.item.artist || ""} /><p/>
               <input type="text" name="price" placeholder="Price" value={props.item.price || ""} />
               <p/>
-            <button onClick={props.reset}>Start Over</button>
+                <button onClick={props.reset}>Start Over</button>
+                <button onClick={props.save}>Save Changes</button>
+                <button onClick={props.delete}>Delete Album</button>
             </form>
           </span>
         );

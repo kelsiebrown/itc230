@@ -10,9 +10,9 @@ const app = express();
 
 // set port to 3000 with Express
 app.set('port', process.env.PORT || 3000);
-app.use(express.static(__dirname + '/public'));
 app.use(require("body-parser").urlencoded({extended: true}));
 app.use(bodyParser.json());
+app.use('/api', require("cors")());
 app.use((err, req, res, next) => {
   console.log(err)
 });
@@ -73,7 +73,7 @@ app.get('/delete', (req, res) => {
 
 
 // APIs
-// get all items
+// get all albums
 app.get('/api/albums', (req, res, next) => {
     let title = req.params.title;
     console.log(title);
@@ -83,7 +83,7 @@ app.get('/api/albums', (req, res, next) => {
     })
 });
 
-// get a single item
+// get a single album
 app.get('/api/album/:title', (req, res, next) => {
     let title = req.params.title;
     Album.findOne({title: title}, (err, found) => {
@@ -92,15 +92,41 @@ app.get('/api/album/:title', (req, res, next) => {
     });
 });
 
-// delete an item
-app.get('/api/delete/:title', (req, res, next) => {
-    Album.remove({"title":req.params.title}, (err, found) => {
+// delete an album
+app.get('/api/delete/:id', (req, res, next) => {
+    Album.remove({"_id":req.params.id}, (err, found) => {
         if (err) return next(err);
         res.json({"deleted": found.result});
     });
 });
 
-// add or update an item
+// add or update an album based on id
+app.post('/api/add', (req, res, next) => {
+    if (!req.body._id) {
+        // add new album
+        let album = new Album({
+            title: req.body.title, 
+            artist: req.body.arist, 
+            price: req.body.price
+        });
+        album.save((err, newAlbum) => {
+            if (err) return next(err);
+            console.log(newAlbum) 
+            res.json({
+                updated: 0, 
+                _id: newAlbum._id
+            });
+        });
+    } else {
+        // update album
+        Album.updateOne({ _id: req.body._id}, {title: req.body.title, artist:req.body.artist, price: req.body.price }, (err, result) => {
+            if (err) return next(err);
+            res.json({updated: result.nModified, _id: req.body._id});
+        });
+    }
+});
+
+// add or update an album based on parameters
 app.get('/api/add/:title/:artist/:price', (req, res, next) => {
     let title = req.params.title;
     Album.update({title: title}, {title:title, artist: req.params.artist, price: req.params.price}, {upsert: true}, (err, result) => {

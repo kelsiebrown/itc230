@@ -2,9 +2,11 @@
 var mongoose = require('mongoose');
 
 // remote db connection settings
-// credentials removed for security
-var connectionString = "<removed>";
-mongoose.connect(connectionString);
+// NOTE - PLEASE REMOVE BEFORE PUSHING TO REPO!!!!!!!!!!!!!!!
+// REMOVE ME!!!!!
+var options = { server: { socketOptions: { keepAlive: 1, connectTimeoutMS: 30000 }}};
+var connectionString = "mongodb://week4_assignment:raaa1451@ds137687.mlab.com:37687/week4";
+mongoose.connect(connectionString, options);
 
 // display any console errors
 var conn = mongoose.connection;
@@ -20,4 +22,5 @@ var albumSchema = mongoose.Schema({
     releasedate: Date
 });
 
+// export schema
 module.exports = mongoose.model('Album', albumSchema);
